@@ -24,7 +24,7 @@ class RevisionApp(tk.Tk):
         for fr in (TitlePage,QuizPage,VideoPage,ChecklistPage,FlashcardPage):
             #Creating objects for each page
             frame = fr(Window, self)
-            frame["bg"] = "#F9E5F1"
+            frame["bg"] = "#8ee6de"
             self.frames[fr] = frame
             #Fills the whole screen
             frame.grid(row=0,column=0,sticky="nsew")
@@ -52,16 +52,14 @@ class TitlePage(tk.Frame):
         
         #Widgits In Main Frame
         self.button = tk.Button(self, text="Leave",command = lambda:controller.destroy()) # Leave button
-        self.textLabel = tk.Label(self, text=self.ChangeText()) # Title
-        self.buttonFrame = tk.Frame(self, bg ="#DBF9E9") #For the 4 buttons; blue just for now 
+        self.textLabel = tk.Label(self, text="Title") # Title
+        self.buttonFrame = tk.Frame(self, bg ="#d633a8") #For the 4 buttons; blue just for now 
 
         #Button Frame Config
         self.buttonFrame.grid_rowconfigure(0, weight = 1)
         self.buttonFrame.grid_columnconfigure(0, weight = 1)
         self.buttonFrame.grid_rowconfigure(1, weight = 1)
         self.buttonFrame.grid_columnconfigure(1, weight = 1)
-
-        
         
         #Packing widgits in the Main Frame
         self.textLabel.pack(side="top")
@@ -81,9 +79,7 @@ class TitlePage(tk.Frame):
         self.ChecklistButton.grid(row = 1, column = 1, ipadx = 90, ipady = 50, padx = 50, pady=30, sticky = "nw")
         
     #MainFrame functions
-    def ChangeText(self):
-        self.text = "Title"
-        return self.text
+    
 
         
 class QuizPage(tk.Frame):
@@ -112,9 +108,27 @@ class ChecklistPage(tk.Frame):
 class FlashcardPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
-        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
-        self.button.pack()
 
+        #Widgits In Main Frame
+        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        self.flashFrame = tk.Frame(self, bg ="#a643f8")
+
+        #Flash Frame Config
+        self.flashFrame.grid_rowconfigure(0,weight=1)
+        self.flashFrame.grid_columnconfigure(0,weight=1)
+        self.flashFrame.grid_rowconfigure(1,weight=1)
+        self.flashFrame.grid_columnconfigure(1,weight=1)
+        
+        #Packing Widgits In Main Frame
+        self.button.pack()
+        self.flashFrame.pack(padx=15,pady=15,fill="both",expand=True)
+
+        #Widgits in Flash Frame
+        self.Title = tk.Label(self.flashFrame,text="Flashcards")
+
+        #Griding widgits in flash frame
+
+        
 #Check it is run not imported
 if __name__ == "__main__":
     #Driver code
