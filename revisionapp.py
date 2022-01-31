@@ -1,7 +1,7 @@
 #Tkinter Interface Code
 import tkinter as tk
 from tkinter import ttk
-
+import random
 
 class RevisionApp(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -115,8 +115,9 @@ class FlashcardPage(tk.Frame):
 
         #Flash Frame Config
         self.flashFrame.grid_rowconfigure(0,weight=1)
-        self.flashFrame.grid_columnconfigure(0,weight=1)
-        self.flashFrame.grid_rowconfigure(1,weight=1)
+        self.flashFrame.grid_rowconfigure(1,weight=5)
+        self.flashFrame.grid_rowconfigure(2,weight=2)
+        self.flashFrame.grid_columnconfigure(0,weight=5)
         self.flashFrame.grid_columnconfigure(1,weight=1)
         
         #Packing Widgits In Main Frame
@@ -125,10 +126,26 @@ class FlashcardPage(tk.Frame):
 
         #Widgits in Flash Frame
         self.Title = tk.Label(self.flashFrame,text="Flashcards")
+        self.topleft = tk.Frame(self.flashFrame, bg = self.randomColour())
+        self.topright = tk.Frame(self.flashFrame, bg = self.randomColour())
+        self.middleleft = tk.Frame(self.flashFrame, bg = self.randomColour())
+        self.middleright = tk.Frame(self.flashFrame, bg = self.randomColour())
+        self.bottomleft = tk.Frame(self.flashFrame, bg = self.randomColour())
+        self.bottomright = tk.Frame(self.flashFrame, bg = self.randomColour())
 
         #Griding widgits in flash frame
-
+        #self.Title.grid()
+        self.topleft.grid(row=0,column=0,sticky="nsew")
+        self.topright.grid(row=0,column=1,sticky="nsew")
+        self.middleleft.grid(row=1,column=0,sticky="nsew")
+        self.middleright.grid(row=1,column=1,sticky="nsew")
+        self.bottomleft.grid(row=2,column=0,sticky="nsew")
+        self.bottomright.grid(row=2,column=1,sticky="nsew")
         
+    def randomColour(self):
+        r = lambda: random.randint(0,255)
+        hexval = ('#%02X%02X%02X' % (r(),r(),r()))
+        return str(hexval)
 #Check it is run not imported
 if __name__ == "__main__":
     #Driver code
