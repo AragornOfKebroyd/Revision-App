@@ -125,27 +125,45 @@ class FlashcardPage(tk.Frame):
         self.flashFrame.pack(padx=15,pady=15,fill="both",expand=True)
 
         #Widgits in Flash Frame
-        self.Title = tk.Label(self.flashFrame,text="Flashcards")
-        self.topleft = tk.Frame(self.flashFrame, bg = self.randomColour())
-        self.topright = tk.Frame(self.flashFrame, bg = self.randomColour())
-        self.middleleft = tk.Frame(self.flashFrame, bg = self.randomColour())
-        self.middleright = tk.Frame(self.flashFrame, bg = self.randomColour())
-        self.bottomleft = tk.Frame(self.flashFrame, bg = self.randomColour())
-        self.bottomright = tk.Frame(self.flashFrame, bg = self.randomColour())
+##        self.topleft = tk.Frame(self.flashFrame, bg = self.randomColour())
+##        self.topright = tk.Frame(self.flashFrame, bg = self.randomColour())
+##        self.middleleft = tk.Frame(self.flashFrame, bg = self.randomColour())
+##        self.middleright = tk.Frame(self.flashFrame, bg = self.randomColour())
+##        self.bottomleft = tk.Frame(self.flashFrame, bg = self.randomColour())
+##        self.bottomright = tk.Frame(self.flashFrame, bg = self.randomColour())
+        self.Title = tk.Label(self.flashFrame, text="Flashcards")
+        self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
+        self.FileList = tk.Listbox(self.flashFrame)
+        self.ScrollBar = tk.Scrollbar(self.flashFrame)
 
+        
         #Griding widgits in flash frame
-        #self.Title.grid()
-        self.topleft.grid(row=0,column=0,sticky="nsew")
-        self.topright.grid(row=0,column=1,sticky="nsew")
-        self.middleleft.grid(row=1,column=0,sticky="nsew")
-        self.middleright.grid(row=1,column=1,sticky="nsew")
-        self.bottomleft.grid(row=2,column=0,sticky="nsew")
-        self.bottomright.grid(row=2,column=1,sticky="nsew")
+##        self.topleft.grid(row=0,column=0,sticky="nsew")
+##        self.topright.grid(row=0,column=1,sticky="nsew")
+##        self.middleleft.grid(row=1,column=0,sticky="nsew")
+##        self.middleright.grid(row=1,column=1,sticky="nsew")
+##        self.bottomleft.grid(row=2,column=0,sticky="nsew")
+##        self.bottomright.grid(row=2,column=1,sticky="nsew")
+        self.Title.grid(row=0,column=0,sticky="n")
+        self.Revise.grid(row=1,column=0,sticky="n")
+        self.FileList.grid(row=1,column=0)
+        self.ScrollBar.grid(row=1,column=0,sticky="nes")
+
+        
+        
         
     def randomColour(self):
         r = lambda: random.randint(0,255)
         hexval = ('#%02X%02X%02X' % (r(),r(),r()))
         return str(hexval)
+
+    def listBoxSetup(self,listbox):
+        for value in ("hello","world"):
+            self.listbox = listbox
+            self.listbox.insert(END,value)
+
+    listBoxSetup(self,self.FileList)
+            
 #Check it is run not imported
 if __name__ == "__main__":
     #Driver code
