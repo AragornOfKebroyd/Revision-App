@@ -124,45 +124,48 @@ class FlashcardPage(tk.Frame):
         self.button.pack()
         self.flashFrame.pack(padx=15,pady=15,fill="both",expand=True)
 
-        #Widgits in Flash Frame
-##        self.topleft = tk.Frame(self.flashFrame, bg = self.randomColour())
-##        self.topright = tk.Frame(self.flashFrame, bg = self.randomColour())
-##        self.middleleft = tk.Frame(self.flashFrame, bg = self.randomColour())
-##        self.middleright = tk.Frame(self.flashFrame, bg = self.randomColour())
-##        self.bottomleft = tk.Frame(self.flashFrame, bg = self.randomColour())
-##        self.bottomright = tk.Frame(self.flashFrame, bg = self.randomColour())
+        #Widgits in Flashcard Frame
         self.Title = tk.Label(self.flashFrame, text="Flashcards")
         self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
         self.FileList = tk.Listbox(self.flashFrame)
         self.ScrollBar = tk.Scrollbar(self.flashFrame)
+        self.button1 = tk.Button(self.flashFrame, text="Button 1")
+        self.button2 = tk.Button(self.flashFrame, text="Button 2")
+        self.button3 = tk.Button(self.flashFrame, text="Button 3")
+        self.button4 = tk.Button(self.flashFrame, text="Button 4")
+
 
         
-        #Griding widgits in flash frame
-##        self.topleft.grid(row=0,column=0,sticky="nsew")
-##        self.topright.grid(row=0,column=1,sticky="nsew")
-##        self.middleleft.grid(row=1,column=0,sticky="nsew")
-##        self.middleright.grid(row=1,column=1,sticky="nsew")
-##        self.bottomleft.grid(row=2,column=0,sticky="nsew")
-##        self.bottomright.grid(row=2,column=1,sticky="nsew")
+        #Griding widgits in flashcard frame
         self.Title.grid(row=0,column=0,sticky="n")
         self.Revise.grid(row=1,column=0,sticky="n")
-        self.FileList.grid(row=1,column=0)
+        self.FileList.grid(row=1,column=0,sticky="nsew")
         self.ScrollBar.grid(row=1,column=0,sticky="nes")
+        self.button1.grid(row=2,column=0,sticky="w",padx=100)
+        self.button2.grid(row=2,column=0,sticky="w",padx=200)
+        self.button3.grid(row=2,column=0,sticky="e",padx=100)
+        self.button4.grid(row=2,column=0,sticky="e",padx=200)
 
-        
-        
+
+
+        def listBoxSetup(self,listbox):
+            for value in range(100):
+                self.listbox = listbox
+                self.listbox.insert(tk.END,value)
+
+
+        #Config
+        listBoxSetup(self,self.FileList)
+        self.FileList.config(yscrollcommand=self.ScrollBar.set)
+        self.ScrollBar.config(command=self.FileList.yview)
+
+
         
     def randomColour(self):
         r = lambda: random.randint(0,255)
         hexval = ('#%02X%02X%02X' % (r(),r(),r()))
         return str(hexval)
-
-    def listBoxSetup(self,listbox):
-        for value in ("hello","world"):
-            self.listbox = listbox
-            self.listbox.insert(END,value)
-
-    listBoxSetup(self,self.FileList)
+    
             
 #Check it is run not imported
 if __name__ == "__main__":
