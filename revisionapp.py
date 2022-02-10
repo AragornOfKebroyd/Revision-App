@@ -117,8 +117,9 @@ class FlashcardPage(tk.Frame):
         self.flashFrame.grid_rowconfigure(0,weight=1)
         self.flashFrame.grid_rowconfigure(1,weight=5)
         self.flashFrame.grid_rowconfigure(2,weight=2)
-        self.flashFrame.grid_columnconfigure(0,weight=5)
-        self.flashFrame.grid_columnconfigure(1,weight=1)
+        self.flashFrame.grid_columnconfigure(0,weight=3)
+        self.flashFrame.grid_columnconfigure(1,weight=2)
+        self.flashFrame.grid_columnconfigure(2,weight=1)
         
         #Packing Widgits In Main Frame
         self.button.pack()
@@ -129,23 +130,25 @@ class FlashcardPage(tk.Frame):
         self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
         self.FileList = tk.Listbox(self.flashFrame)
         self.ScrollBar = tk.Scrollbar(self.flashFrame)
-        self.button1 = tk.Button(self.flashFrame, text="Button 1")
-        self.button2 = tk.Button(self.flashFrame, text="Button 2")
-        self.button3 = tk.Button(self.flashFrame, text="Button 3")
-        self.button4 = tk.Button(self.flashFrame, text="Button 4")
-
+        self.selectButton = tk.Button(self.flashFrame, text="Select")
+        self.backButton = tk.Button(self.flashFrame, text="Back")
+        self.renameButton = tk.Button(self.flashFrame, text="Rename")
+        self.deleteButton = tk.Button(self.flashFrame, text="Delete")
+        self.addFlashcardButton = tk.Button(self.flashFrame, width = 15, height = 8, text="Add New Flashcard")
+        self.editFlashcardButton = tk.Button(self.flashFrame, width = 15, height = 8, text="Edit Flashcard", state = "disabled")
 
         
         #Griding widgits in flashcard frame
-        self.Title.grid(row=0,column=0,sticky="n")
+        self.Title.grid(row=0,column=0,columnspan=2,sticky="n")
         self.Revise.grid(row=1,column=0,sticky="n")
-        self.FileList.grid(row=1,column=0,sticky="nsew")
-        self.ScrollBar.grid(row=1,column=0,sticky="nes")
-        self.button1.grid(row=2,column=0,sticky="w",padx=100)
-        self.button2.grid(row=2,column=0,sticky="w",padx=200)
-        self.button3.grid(row=2,column=0,sticky="e",padx=100)
-        self.button4.grid(row=2,column=0,sticky="e",padx=200)
-
+        self.FileList.grid(row=1,column=0,columnspan=2,sticky="nsew")
+        self.ScrollBar.grid(row=1,column=0,columnspan=2,sticky="nes")
+        self.selectButton.grid(row=2,column=0,sticky="w",padx=10)
+        self.backButton.grid(row=2,column=0,sticky="w",padx=60)
+        self.renameButton.grid(row=2,column=0,sticky="w",padx=100)
+        self.deleteButton.grid(row=2,column=1,sticky="e",padx=10)
+        self.addFlashcardButton.grid(row=1,rowspan=3,column=2,sticky="n",pady=50)
+        self.editFlashcardButton.grid(row=1,rowspan=3,column=2,sticky="n",pady=250)
 
 
         def listBoxSetup(self,listbox):
@@ -166,7 +169,6 @@ class FlashcardPage(tk.Frame):
         hexval = ('#%02X%02X%02X' % (r(),r(),r()))
         return str(hexval)
     
-            
 #Check it is run not imported
 if __name__ == "__main__":
     #Driver code
