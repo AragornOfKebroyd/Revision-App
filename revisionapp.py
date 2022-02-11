@@ -130,10 +130,10 @@ class FlashcardPage(tk.Frame):
         self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
         self.FileList = tk.Listbox(self.flashFrame)
         self.ScrollBar = tk.Scrollbar(self.flashFrame)
-        self.selectButton = tk.Button(self.flashFrame, text="Select")
-        self.backButton = tk.Button(self.flashFrame, text="Back")
-        self.renameButton = tk.Button(self.flashFrame, text="Rename")
-        self.deleteButton = tk.Button(self.flashFrame, text="Delete")
+        self.selectButton = tk.Button(self.flashFrame, text="Select", state = "disabled")
+        self.backButton = tk.Button(self.flashFrame, text="Back", state = "disabled")
+        self.renameButton = tk.Button(self.flashFrame, text="Rename", state = "disabled")
+        self.deleteButton = tk.Button(self.flashFrame, text="Delete", state = "disabled")
         self.addFlashcardButton = tk.Button(self.flashFrame, width = 15, height = 8, text="Add New Flashcard")
         self.editFlashcardButton = tk.Button(self.flashFrame, width = 15, height = 8, text="Edit Flashcard", state = "disabled")
 
@@ -151,19 +151,18 @@ class FlashcardPage(tk.Frame):
         self.editFlashcardButton.grid(row=1,rowspan=3,column=2,sticky="n",pady=250)
 
 
-        def listBoxSetup(self,listbox):
-            for value in range(100):
-                self.listbox = listbox
-                self.listbox.insert(tk.END,value)
-
-
+        
         #Config
-        listBoxSetup(self,self.FileList)
+        self.listBoxSetup(self.FileList)
         self.FileList.config(yscrollcommand=self.ScrollBar.set)
         self.ScrollBar.config(command=self.FileList.yview)
-
-
         
+
+    def listBoxSetup(self,listbox):
+            for value in range(101):
+                self.listbox = listbox
+                self.listbox.insert(tk.END,"📁"+str(value)) #This is really buggy with the folder icon,
+
     def randomColour(self):
         r = lambda: random.randint(0,255)
         hexval = ('#%02X%02X%02X' % (r(),r(),r()))
