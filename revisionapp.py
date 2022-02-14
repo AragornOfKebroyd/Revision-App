@@ -47,7 +47,7 @@ class TitlePage(tk.Frame):
         self.parent = parent #parent is the parent window
         
         #Window Setup
-        controller.title("test")
+        controller.title("Revision App")
         controller.minsize(942,669)
         
         #Widgits In Main Frame
@@ -128,16 +128,17 @@ class FlashcardPage(tk.Frame):
         #Widgits in Flashcard Frame
         self.Title = tk.Label(self.flashFrame, text="Flashcards")
         self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
-        self.FileList = tk.Listbox(self.flashFrame)
+        self.FileList = tk.Listbox(self.flashFrame, selectmode = "single")
         self.ScrollBar = tk.Scrollbar(self.flashFrame)
         self.selectButton = tk.Button(self.flashFrame, text="Select", state = "disabled")
         self.backButton = tk.Button(self.flashFrame, text="Back", state = "disabled")
         self.renameButton = tk.Button(self.flashFrame, text="Rename", state = "disabled")
         self.deleteButton = tk.Button(self.flashFrame, text="Delete", state = "disabled")
-        self.addFlashcardButton = tk.Button(self.flashFrame, width = 15, height = 8, text="Add New Flashcard")
-        self.editFlashcardButton = tk.Button(self.flashFrame, width = 15, height = 8, text="Edit Flashcard", state = "disabled")
+        self.addFlashcardButton = tk.Button(self.flashFrame, text="Add New Flashcard", width = 15, height = 8)
+        self.addFolderButton = tk.Button(self.flashFrame, text="Add New Folder", width = 15, height = 8)
+        self.editFlashcardButton = tk.Button(self.flashFrame, text="Edit Flashcard", width = 15, height = 8, state = "disabled")
 
-        
+            
         #Griding widgits in flashcard frame
         self.Title.grid(row=0,column=0,columnspan=2,sticky="n")
         self.Revise.grid(row=1,column=0,sticky="n")
@@ -147,33 +148,44 @@ class FlashcardPage(tk.Frame):
         self.backButton.grid(row=2,column=0,sticky="w",padx=60)
         self.renameButton.grid(row=2,column=0,sticky="w",padx=100)
         self.deleteButton.grid(row=2,column=1,sticky="e",padx=10)
-        self.addFlashcardButton.grid(row=1,rowspan=3,column=2,sticky="n",pady=50)
-        self.editFlashcardButton.grid(row=1,rowspan=3,column=2,sticky="n",pady=250)
-
-
+        self.addFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=25)
+        self.addFolderButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=250)
+        self.editFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="s",pady=25)
         
         #Config
         self.listBoxSetup(self.FileList)
         self.FileList.config(yscrollcommand=self.ScrollBar.set)
         self.ScrollBar.config(command=self.FileList.yview)
-        
-
+        self.FileList.bind("<<ListboxSelect>>", lambda x:self.test(self.FileList))
+    
     def listBoxSetup(self,listbox):
-            for value in range(101):
-                self.listbox = listbox
-                self.listbox.insert(tk.END,"📁"+str(value)) #This is really buggy with the folder icon,
+        for value in range(101):
+            self.listbox = listbox
+            self.listbox.insert(tk.END,"📁"+str(value)) #This is really buggy with the folder icon,
 
+    #For getting a random hex value
     def randomColour(self):
         r = lambda: random.randint(0,255)
         hexval = ('#%02X%02X%02X' % (r(),r(),r()))
         return str(hexval)
-    
+
+    def test(self,FileList):
+        selectedValue = FileList.curselection()
+
+        ## Some SQL code i dont want to write
+        
+        print(selectedValue)
+        
+        self.selectButton.configure(state = "active")
+        self.backButton.configure(state = "active")
+        self.renameButton.configure(state = "active")
+        self.deleteButton.configure(state = "active")
+        
 #Check it is run not imported
 if __name__ == "__main__":
-    #Driver code
-    #root = tk.Tk()
-    #App = RevisionApp(root)
-    #root.mainloop()
-
     app = RevisionApp()
     app.mainloop()
+
+
+
+
