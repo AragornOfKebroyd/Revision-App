@@ -160,11 +160,10 @@ class FlashcardPage(tk.Frame):
         self.FileList.bind("<<ListboxSelect>>", lambda x:self.ListBoxUpdate(self.FileList))
         
     def addFolder(self):
-        if self.messageboxexists == False:
-            self.messageboxexists = True
-            MessageBox = Popup("test")
-        else:
-            print("no")
+        MessageBox = Popup("Add Folder")
+
+    def addFile(self):
+        MessageBox = Popup("Add File")
         
     def listBoxSetup(self,listbox):
         for value in range(101):
@@ -187,13 +186,16 @@ class FlashcardPage(tk.Frame):
         self.renameButton.configure(state = "active")
         self.deleteButton.configure(state = "active")
 
-    def changeVar(self):
-        self.messageboxexists = False
-        print("works")
     
 #For all popups
-class Popup(RevisionApp):
+class Popup(tk.Frame):
     def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self)
+        #Make this the only interactable window
+        self.grab_set()
+        self.takefocus = True
+        self.focus_set()
+        
         #get a var from args
         self.message = args[0]
         #run popup code
@@ -202,7 +204,12 @@ class Popup(RevisionApp):
     def popupmsg(self,msg):
         #Winodw Creation
         self.popup = tk.Tk()
+        self.popup.attributes('-topmost', True)
+        self.popup.update()
         self.popup.wm_title("Create Folder")
+        self.popup.minsize(200,70)
+        self.popup.maxsize(200,70)
+        
         #Widgits
         self.message = tk.Label(self.popup, text=msg)
         self.destroyButton = ttk.Button(self.popup, text="Okay", command = lambda:self.destroy())
@@ -210,15 +217,16 @@ class Popup(RevisionApp):
         #Packing
         self.message.pack(side="top", fill="x", pady=10)
         self.destroyButton.pack()
-
         #Mainloop
         self.popup.mainloop()
+        
 
     def destroy(self):
         self.popup.destroy()
-        FlashcardPage.changeVar(self)
+        self.grab_release()
         
 #Check it is run not imported
 if __name__ == "__main__":
     app = RevisionApp()
     app.mainloop()
+    
