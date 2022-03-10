@@ -8,13 +8,13 @@ class RevisionApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs) # initialises the first parameter of the class
 
         #Create the window
-        Window = tk.Frame(self,bg="green")
+        self.Window = tk.Frame(self,bg="green")
         #Make sure it fits the whole window
-        Window.pack(fill="both",side="top",expand=True)
+        self.Window.pack(fill="both",side="top",expand=True)
 
         #makes sure there is only 1 row and 1 coplumn
-        Window.grid_rowconfigure(0, weight = 1)
-        Window.grid_columnconfigure(0, weight = 1)
+        self.Window.grid_rowconfigure(0, weight = 1)
+        self.Window.grid_columnconfigure(0, weight = 1)
 
         
         #initialise a list for the different pages
@@ -23,11 +23,13 @@ class RevisionApp(tk.Tk):
         #Interates through the page classes
         for fr in (TitlePage,QuizPage,VideoPage,ChecklistPage,FlashcardPage):
             #Creating objects for each page
-            frame = fr(Window, self)
-            frame["bg"] = "#8ee6de"
-            self.frames[fr] = frame
+
+            #fr is each object in the above list, making self.Window the controller of all of them
+            self.frame = fr(self.Window, self)
+            self.frame["bg"] = "#8ee6de"
+            self.frames[fr] = self.frame
             #Fills the whole screen
-            frame.grid(row=0,column=0,sticky="nsew")
+            self.frame.grid(row=0,column=0,sticky="nsew")
             
         #Call the function to show the main title page
         self.showPage(TitlePage)
@@ -35,8 +37,8 @@ class RevisionApp(tk.Tk):
     
     def showPage(self, frame):
         #Select the page to bring to front
-        page = self.frames[frame]
-        page.tkraise() #Brings the frame to the front
+        self.page = self.frames[frame]
+        self.page.tkraise() #Brings the frame to the front
 
 
 #Each Class is a different UI in the app, this is the one it opens on  
@@ -108,7 +110,6 @@ class ChecklistPage(tk.Frame):
 class FlashcardPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
-        self.messageboxexists = False
         
         #Widgits In Main Frame
         self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
@@ -135,8 +136,8 @@ class FlashcardPage(tk.Frame):
         self.backButton = tk.Button(self.flashFrame, text="Back", state = "disabled")
         self.renameButton = tk.Button(self.flashFrame, text="Rename", state = "disabled")
         self.deleteButton = tk.Button(self.flashFrame, text="Delete", state = "disabled")
-        self.addFlashcardButton = tk.Button(self.flashFrame, text="Add New Flashcard", width = 15, height = 8)
-        self.addFolderButton = tk.Button(self.flashFrame, text="Add New Folder", width = 15, height = 8, command = lambda:self.addFolder())
+        self.addFlashcardButton = tk.Button(self.flashFrame, text="Add New Flashcard", width = 15, height = 8,command = lambda:self.CreatePopup("File"))
+        self.addFolderButton = tk.Button(self.flashFrame, text="Add New Folder", width = 15, height = 8, command = lambda:self.CreatePopup("Folder"))
         self.editFlashcardButton = tk.Button(self.flashFrame, text="Edit Flashcard", width = 15, height = 8, state = "disabled")
 
             
@@ -154,22 +155,33 @@ class FlashcardPage(tk.Frame):
         self.editFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(375,0))
         
         #Config
-        self.listBoxSetup(self.FileList)
+        self.listBoxSetup()
         self.FileList.config(yscrollcommand=self.ScrollBar.set)
         self.ScrollBar.config(command=self.FileList.yview)
         self.FileList.bind("<<ListboxSelect>>", lambda x:self.ListBoxUpdate(self.FileList))
         
-    def addFolder(self):
-        MessageBox = Popup("Add Folder")
+            
+    def CreatePopup(self,createType):
+        if createType == "Folder":
+            MessageBox = Popup("Add Folder",self,createType)
+        elif createType == "File":
+            MessageBox = Popup("Add File",self,createType)
 
-    def addFile(self):
-        MessageBox = Popup("Add File")
+    def AddFolderOrFile(self,text,createType):
+        if self.FileList.cget("state") == tk.DISABLED:
+            self.FileList.config(state = tk.NORMAL) 
+            self.FileList.delete(0)
+        self.FileList.config(state = tk.NORMAL) 
+        if createType == "Folder":
+            self.FileList.insert(tk.END,"📁"+str(text)) #This is really buggy with the folder icon,
+        elif createType == "File":
+            self.FileList.insert(tk.END,text)
         
-    def listBoxSetup(self,listbox):
-        for value in range(101):
-            self.listbox = listbox
-            self.listbox.insert(tk.END,"📁"+str(value)) #This is really buggy with the folder icon,
-        pass
+
+    def listBoxSetup(self):
+        self.FileList.insert(tk.END,"create folders or flashcards")
+        self.FileList.config(state = tk.DISABLED) 
+        
     #For getting a random hex value
     def randomColour(self):
         r = lambda: random.randint(0,255)
@@ -179,8 +191,6 @@ class FlashcardPage(tk.Frame):
     def ListBoxUpdate(self,FileList):
         selectedValue = FileList.curselection()
         print(selectedValue)
-        ## Some SQL code i dont want to write
-        
         self.selectButton.configure(state = "active")
         self.backButton.configure(state = "active")
         self.renameButton.configure(state = "active")
@@ -191,42 +201,60 @@ class FlashcardPage(tk.Frame):
 class Popup(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self)
-        #Make this the only interactable window
-        self.grab_set()
-        self.takefocus = True
-        self.focus_set()
-        
         #get a var from args
         self.message = args[0]
+        self.controller = args[1]
+        self.createType = args[2]
         #run popup code
-        self.popupmsg(self.message)
-
-    def popupmsg(self,msg):
+        self.popupmsg()
+        
+    def popupmsg(self):
+        #var defenition
         #Winodw Creation
-        self.popup = tk.Tk()
+        self.popup = tk.Toplevel()
         self.popup.attributes('-topmost', True)
         self.popup.update()
-        self.popup.wm_title("Create Folder")
+        self.popup.title("Add")
+        self.popup.geometry("200x70+300+200")
         self.popup.minsize(200,70)
         self.popup.maxsize(200,70)
         
+        #Make this the only interactable window
+        self.popup.grab_set()
+        self.popup.takefocus = True
+        self.popup.focus_set()
+
+        #Grid Config
+        self.popup.grid_rowconfigure(0,weight=1)
+        self.popup.grid_rowconfigure(1,weight=1)
+        self.popup.grid_columnconfigure(0,weight=1)
+        self.popup.grid_columnconfigure(1,weight=1)
+        
         #Widgits
-        self.message = tk.Label(self.popup, text=msg)
-        self.destroyButton = ttk.Button(self.popup, text="Okay", command = lambda:self.destroy())
+        self.message = tk.Label(self.popup, text=self.message)
+        self.inputBox = tk.Entry(self.popup)
+        self.destroyButton = tk.Button(self.popup, text="Cancel", command = lambda:self.QuitPopup())
+        self.enterButton = tk.Button(self.popup, text="Enter", command = lambda:self.enter())
 
         #Packing
-        self.message.pack(side="top", fill="x", pady=10)
-        self.destroyButton.pack()
-        #Mainloop
-        self.popup.mainloop()
+        self.message.grid(row=0,column=0)
+        self.inputBox.grid(row=0,column=1)
+        self.destroyButton.grid(row=1,column=0)
+        self.enterButton.grid(row=1,column=1)
         
-
-    def destroy(self):
+    def QuitPopup(self):
         self.popup.destroy()
         self.grab_release()
+
+    def enter(self):
+        self.message = self.inputBox.get()
+        self.QuitPopup()
+        self.controller.AddFolderOrFile(self.message,self.createType)
+        
         
 #Check it is run not imported
 if __name__ == "__main__":
     app = RevisionApp()
+    print("start")
     app.mainloop()
-    
+    print("end")
