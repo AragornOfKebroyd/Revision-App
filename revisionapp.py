@@ -114,6 +114,7 @@ class FlashcardPage(tk.Frame):
         #Widgits In Main Frame
         self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
         self.flashFrame = tk.Frame(self, bg ="#a643f8")
+        self.menu = tk.Menu(self, tearoff = 0)
 
         #Flash Frame Config
         self.flashFrame.grid_rowconfigure(0,weight=1)
@@ -122,6 +123,12 @@ class FlashcardPage(tk.Frame):
         self.flashFrame.grid_columnconfigure(0,weight=3)
         self.flashFrame.grid_columnconfigure(1,weight=2)
         self.flashFrame.grid_columnconfigure(2,weight=1)
+
+        #Menu Config
+        self.menu.add_command(label="Select",command=lambda:self.OpenFlashcard())
+        self.menu.add_command(label="Rename",command=lambda:self.EditFlashcard())
+        self.menu.add_separator()
+        self.menu.add_command(label="Delete",command=lambda:self.DeleteFlashcard())
         
         #Packing Widgits In Main Frame
         self.button.pack()
@@ -159,8 +166,12 @@ class FlashcardPage(tk.Frame):
         self.FileList.config(yscrollcommand=self.ScrollBar.set)
         self.ScrollBar.config(command=self.FileList.yview)
         self.FileList.bind("<<ListboxSelect>>", lambda x:self.ListBoxUpdate(self.FileList))
-        
-            
+        self.bind("<Button-3>", lambda:self.contextMenu)
+    
+    def listBoxSetup(self):
+        self.FileList.insert(tk.END,"create folders or flashcards")
+        self.FileList.config(state=tk.DISABLED)
+
     def CreatePopup(self,createType):
         if createType == "Folder":
             MessageBox = Popup("Add Folder",self,createType)
@@ -169,18 +180,14 @@ class FlashcardPage(tk.Frame):
 
     def AddFolderOrFile(self,text,createType):
         if self.FileList.cget("state") == tk.DISABLED:
-            self.FileList.config(state = tk.NORMAL) 
+            #print(self.FileList.cget("state"))
+            self.FileList.config(state=tk.NORMAL)
             self.FileList.delete(0)
         self.FileList.config(state = tk.NORMAL) 
         if createType == "Folder":
             self.FileList.insert(tk.END,"📁"+str(text)) #This is really buggy with the folder icon,
         elif createType == "File":
             self.FileList.insert(tk.END,text)
-        
-
-    def listBoxSetup(self):
-        self.FileList.insert(tk.END,"create folders or flashcards")
-        self.FileList.config(state = tk.DISABLED) 
         
     #For getting a random hex value
     def randomColour(self):
@@ -196,7 +203,21 @@ class FlashcardPage(tk.Frame):
         self.renameButton.configure(state = "active")
         self.deleteButton.configure(state = "active")
 
-    
+    #Functions for menu
+    def contextMenu(self):
+        try:
+            slef.menu.tk_popup(event.x_self, event.y_self)
+        finally: 
+            self.menu.grab_release()
+
+    def OpenFlashcard(self):
+        print("editing...")
+
+    def RenameFlashcard(self):
+        print("renaming...")
+
+    def DeleteFlashcard(self):
+        print("selecting...")
 #For all popups
 class Popup(tk.Frame):
     def __init__(self, *args, **kwargs):
