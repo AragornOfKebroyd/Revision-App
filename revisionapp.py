@@ -1,12 +1,22 @@
 #Imports
+from ast import excepthandler
+from calendar import c
+from copyreg import constructor
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
+import os
+from os import listdir
+import stat
+import shutil
 import random
+
+clearOnStartUp = True
 
 class RevisionApp(tk.Tk):
     def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs) # initialises the first parameter of the class
-
+        tk.Tk.__init__(self, *args, **kwargs) #creates the base Tk window that everything is placed in
+        
         #Create the window
         self.Window = tk.Frame(self,bg="green")
         #Make sure it fits the whole window
@@ -16,29 +26,32 @@ class RevisionApp(tk.Tk):
         self.Window.grid_rowconfigure(0, weight = 1)
         self.Window.grid_columnconfigure(0, weight = 1)
 
-        
-        #initialise a list for the different pages
-        self.frames = {}
+        self.frames = {} #initialise a list for the different pages
 
         #Interates through the page classes
         for fr in (TitlePage,QuizPage,VideoPage,ChecklistPage,FlashcardPage):
             #Creating objects for each page
-
             #fr is each object in the above list, making self.Window the controller of all of them
             self.frame = fr(self.Window, self)
             self.frame["bg"] = "#8ee6de"
             self.frames[fr] = self.frame
-            #Fills the whole screen
-            self.frame.grid(row=0,column=0,sticky="nsew")
+            
             
         #Call the function to show the main title page
         self.showPage(TitlePage)
 
-    
     def showPage(self, frame):
-        #Select the page to bring to front
-        self.page = self.frames[frame]
-        self.page.tkraise() #Brings the frame to the front
+        try: #If it has allready started
+            self.previousPage = self.page #where it will go to the except 
+            self.page = self.frames[frame]
+            self.page.grid(row=0,column=0,sticky="nsew")
+            self.page.tkraise()#Brings the frame to the front
+            self.previousPage.grid_forget()
+            
+        except: #There is no previous page, e.g its starting up
+            self.page = self.frames[frame]
+            self.page.grid(row=0,column=0,sticky="nsew")
+            self.page.tkraise()#Brings the frame to the front
 
 
 #Each Class is a different UI in the app, this is the one it opens on  
@@ -82,7 +95,6 @@ class TitlePage(tk.Frame):
         
     #MainFrame functions
     
-
         
 class QuizPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -91,7 +103,6 @@ class QuizPage(tk.Frame):
         self.button.pack()
 
     
-
 class VideoPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
@@ -106,15 +117,41 @@ class ChecklistPage(tk.Frame):
         self.button.pack()
 
 
-
 class FlashcardPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
         
+        #First Time Setup Of OS, makes the file directory if it doesnt allready exist
+        self.parent_dir = os.getcwd()
+        self.directory = "Flashcards"
+        self.path = os.path.join(self.parent_dir, self.directory)
+        self.currentDir = self.path #Keeps track of what to display
+        self.construction = False #makes sure no new folders can be gone into whilst one is being set up
+        try:
+            os.mkdir(self.path)
+        except OSError:
+            #It allready exists
+            pass
+        
+        #Clears the root directory if the setting is enabled (mainly for when i dont want to have to clear it every time manually)
+        if clearOnStartUp == True:
+            for thing in os.listdir(self.path):
+                thingPath = os.path.join(self.path,thing)
+                try:
+                    os.remove(thingPath)
+                except OSError: #will except if it is a directory
+                    try:
+                        #empty directory deletion
+                        os.rmdir(thingPath)
+                    except:
+                        #delete a directory and everything in it
+                        shutil.rmtree(thingPath) 
+        else:
+            #code to show what folders and flashcards there are
+            pass
         #Widgits In Main Frame
         self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
         self.flashFrame = tk.Frame(self, bg ="#a643f8")
-        self.menu = tk.Menu(self, tearoff = 0)
 
         #Flash Frame Config
         self.flashFrame.grid_rowconfigure(0,weight=1)
@@ -124,12 +161,6 @@ class FlashcardPage(tk.Frame):
         self.flashFrame.grid_columnconfigure(1,weight=2)
         self.flashFrame.grid_columnconfigure(2,weight=1)
 
-        #Menu Config
-        self.menu.add_command(label="Select",command=lambda:self.OpenFlashcard())
-        self.menu.add_command(label="Rename",command=lambda:self.EditFlashcard())
-        self.menu.add_separator()
-        self.menu.add_command(label="Delete",command=lambda:self.DeleteFlashcard())
-        
         #Packing Widgits In Main Frame
         self.button.pack()
         self.flashFrame.pack(padx=15,pady=15,fill="both",expand=True)
@@ -137,15 +168,15 @@ class FlashcardPage(tk.Frame):
         #Widgits in Flashcard Frame
         self.Title = tk.Label(self.flashFrame, text="Flashcards")
         self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
-        self.FileList = tk.Listbox(self.flashFrame, selectmode = "single")
+        self.FileList = tk.Listbox(self.flashFrame, selectmode = "single",activestyle = "none")
         self.ScrollBar = tk.Scrollbar(self.flashFrame)
-        self.selectButton = tk.Button(self.flashFrame, text="Select", state = "disabled")
-        self.backButton = tk.Button(self.flashFrame, text="Back", state = "disabled")
-        self.renameButton = tk.Button(self.flashFrame, text="Rename", state = "disabled")
-        self.deleteButton = tk.Button(self.flashFrame, text="Delete", state = "disabled")
+        self.openButton = tk.Button(self.flashFrame, text="Open", state = "disabled",command = lambda:self.SelectOrEditPathway())
+        self.backButton = tk.Button(self.flashFrame, text="Back", state = "disabled",command = lambda:self.BackButton())
+        self.renameButton = tk.Button(self.flashFrame, text="Rename", state = "disabled",command = lambda:self.RenameItem())
+        self.deleteButton = tk.Button(self.flashFrame, text="Delete", state = "disabled",command = lambda:self.DeleteItem())
         self.addFlashcardButton = tk.Button(self.flashFrame, text="Add New Flashcard", width = 15, height = 8,command = lambda:self.CreatePopup("File"))
         self.addFolderButton = tk.Button(self.flashFrame, text="Add New Folder", width = 15, height = 8, command = lambda:self.CreatePopup("Folder"))
-        self.editFlashcardButton = tk.Button(self.flashFrame, text="Edit Flashcard", width = 15, height = 8, state = "disabled")
+        self.editFlashcardButton = tk.Button(self.flashFrame, text="Edit Flashcard", width = 15, height = 8, state = "disabled",command = lambda:self.SelectOrEditPathway())
 
             
         #Griding widgits in flashcard frame
@@ -153,71 +184,250 @@ class FlashcardPage(tk.Frame):
         self.Revise.grid(row=1,column=0,sticky="n")
         self.FileList.grid(row=1,column=0,columnspan=2,sticky="nsew")
         self.ScrollBar.grid(row=1,column=0,columnspan=2,sticky="nes")
-        self.selectButton.grid(row=2,column=0,sticky="w",padx=10)
-        self.backButton.grid(row=2,column=0,sticky="w",padx=60)
-        self.renameButton.grid(row=2,column=0,sticky="w",padx=100)
+        self.openButton.grid(row=2,column=0,sticky="w",padx=10)
+        self.backButton.grid(row=2,column=0,sticky="w",padx=55)
+        self.renameButton.grid(row=2,column=0,sticky="w",padx=96)
         self.deleteButton.grid(row=2,column=1,sticky="e",padx=10)
         self.addFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(25,0))
         self.addFolderButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(200,0))
         self.editFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(375,0))
         
         #Config
-        self.listBoxSetup()
+        self.listBoxWithNothing()
         self.FileList.config(yscrollcommand=self.ScrollBar.set)
         self.ScrollBar.config(command=self.FileList.yview)
-        self.FileList.bind("<<ListboxSelect>>", lambda x:self.ListBoxUpdate(self.FileList))
-        self.bind("<Button-3>", lambda:self.contextMenu)
-    
-    def listBoxSetup(self):
+        self.FileList.bind("<<ListboxSelect>>", lambda x:self.ListBoxClicked())
+        self.FileList.bind('<Double-Button-1>', lambda x:self.SelectOrEditPathway()) 
+        self.FileList.bind('<Return>',lambda x: self.SelectOrEditPathway())
+        self.FileList.bind('<Escape>', lambda x: self.BackButton())
+
+    def listBoxWithNothing(self):
         self.FileList.insert(tk.END,"create folders or flashcards")
         self.FileList.config(state=tk.DISABLED)
+        self.selectedType = "None"
 
     def CreatePopup(self,createType):
         if createType == "Folder":
-            MessageBox = Popup("Add Folder",self,createType)
+            self.MessageBox = Popup("Add Folder",self,createType)
         elif createType == "File":
-            MessageBox = Popup("Add File",self,createType)
+            self.MessageBox = Popup("Add File",self,createType)
 
     def AddFolderOrFile(self,text,createType):
+        #Validation
+        #Check if something with that name allready exists
+        if self.checkIfItemExistsYet(text,createType) == True:
+            messagebox.showinfo(title="(︶︿︶)", message="That file or folder allready exists!")
+            return
+
+        #check there is any text
+        if text == "" or text.replace(" ","") == "":
+            messagebox.showinfo(title="XD", message="You need a name silly!")
+            return
+        
+        if ".ben" in text:
+            messagebox.showinfo(title=">.<", message="Can you not please, .ben is a very important file type, dont mess with it!")
+            return
+
+        for x in ["#","%","&","{","}","\\","<",">","*","?","/","$","!","\'","\"",":","@","+","`","|","="]:
+            if x in text:
+                messagebox.showinfo(title="(︶︿︶)", message="You can not include "+x+" in a file or folder name!")
+                return
+
         if self.FileList.cget("state") == tk.DISABLED:
-            #print(self.FileList.cget("state"))
+            #if there is nothing yet in the list, change it to active and delete the message to add new stuff
             self.FileList.config(state=tk.NORMAL)
             self.FileList.delete(0)
+        
+        #just in case yknow
         self.FileList.config(state = tk.NORMAL) 
+
         if createType == "Folder":
-            self.FileList.insert(tk.END,"📁"+str(text)) #This is really buggy with the folder icon,
+            self.FileList.insert(tk.END,"📁"+text) #This is really buggy with the folder icon, apparently not in vscode
+
+            #create a new folder
+            self.newPath = os.path.join(self.currentDir,text)
+            os.mkdir(self.newPath)
+
         elif createType == "File":
             self.FileList.insert(tk.END,text)
+
+            #Create a new text file with directory of the root, need to change in future
+            self.filename = text+".ben"
+            self.filepath = os.path.join(self.currentDir,self.filename)
+            with open(self.filepath,"w") as newTextFile:
+                newTextFile.write("work please")
         
+    def EditFolderOrFile(self,oldName,newName):
+        #check if it is legal to change it
+        if self.checkIfItemExistsYet(newName,self.selectedType) == True:
+            messagebox.showinfo(title="(︶︿︶)", message="That file or folder allready exists!")
+            return
+
+        #File or folder
+        if self.selectedType == "File":
+            self.FileList.delete(self.selectedIndex)
+            self.FileList.insert(self.selectedIndex,newName)
+            os.rename(os.path.join(self.currentDir,oldName+".ben"),os.path.join(self.currentDir,newName+".ben")) 
+
+        else:
+            self.FileList.delete(self.selectedIndex)
+            self.FileList.insert(self.selectedIndex,"📁"+newName) #This is really buggy with the folder icon, apparently not in vscode
+            os.rename(os.path.join(self.currentDir,oldName),os.path.join(self.currentDir,newName))
+
+
     #For getting a random hex value
     def randomColour(self):
         r = lambda: random.randint(0,255)
         hexval = ('#%02X%02X%02X' % (r(),r(),r()))
         return str(hexval)
 
-    def ListBoxUpdate(self,FileList):
-        selectedValue = FileList.curselection()
-        print(selectedValue)
-        self.selectButton.configure(state = "active")
-        self.backButton.configure(state = "active")
-        self.renameButton.configure(state = "active")
-        self.deleteButton.configure(state = "active")
-
-    #Functions for menu
-    def contextMenu(self):
+    def ListBoxClicked(self):
         try:
-            slef.menu.tk_popup(event.x_self, event.y_self)
-        finally: 
-            self.menu.grab_release()
+            self.selectedIndex = self.FileList.curselection()
+            self.selectedValue = self.FileList.get(self.FileList.curselection())
+        except:
+            self.selectedIndex = None
+            self.selectedValue = None
+            return
+        
+        if self.selectedValue[0] == "📁":
+            self.selectedType = "Folder"
+            #Change buttons to use depending on what is selected
+            self.openButton.configure(state = "active")
+            self.backButton.configure(state = "active")
+            self.renameButton.configure(state = "active")
+            self.deleteButton.configure(state = "active")
+            self.editFlashcardButton.configure(state = "disabled")
+        else:
+            self.selectedType = "File"
+            #Change buttons to use depending on what is selected
+            self.openButton.configure(state = "disabled")
+            self.backButton.configure(state = "active")
+            self.renameButton.configure(state = "active")
+            self.deleteButton.configure(state = "active")
+            self.editFlashcardButton.configure(state = "active")
 
-    def OpenFlashcard(self):
-        print("editing...")
+    
+    def ListBoxUpdate(self):
+        #lists will hold the names to be sorted and displayed in the right order
+        self.flashcardList = []
+        self.folderList = []
 
-    def RenameFlashcard(self):
-        print("renaming...")
+        #Removes the current gui
+        self.FileList.config(state=tk.NORMAL)
+        self.FileList.delete(0,tk.END)
+        self.selectedValue = None
+        #Adds all the stuff in the folder
+        try:
+            ListOfThings = os.listdir(self.currentDir)
+        except Exception as e:
+            self.currentDir = os.path.dirname(self.currentDir)
+            ListOfThings = os.listdir(self.currentDir)
 
-    def DeleteFlashcard(self):
-        print("selecting...")
+        #Get all the contents fo the current directory into 2 lists for folders and files
+        for entry in ListOfThings:
+            self.fullDirItt = os.path.join(self.currentDir,entry)
+            if os.path.isdir(self.fullDirItt) == True:
+                self.folderList.append("📁"+entry)
+            else:
+                self.flashcardList.append(entry.replace(".ben",""))
+        
+        #sort the lists
+        self.folderList.sort()
+        self.flashcardList.sort()
+
+        for folder in self.folderList:
+            self.FileList.insert(tk.END,folder)
+        
+        for falshcard in self.flashcardList:
+            self.FileList.insert(tk.END,falshcard)
+
+        #if folder is empty
+        if self.FileList.get(0) == "":
+            self.listBoxWithNothing()
+        
+        
+    def SelectOrEditPathway(self):
+        if self.selectedType == "File" and self.selectedValue != None:
+            self.OpenFile(self.selectedValue)
+
+        elif self.selectedType == "Folder" and self.selectedValue != None: 
+            #[1:] gets rid of folder icon
+            self.OpenFolder(self.selectedValue[1:])
+
+    def checkIfItemExistsYet(self,item,createType):
+        self.CheckItemtext = item
+        self.CheckItemtype = createType
+        self.folderList = []
+        self.flashcardList = []
+        
+        try:
+            ListOfThings = os.listdir(self.currentDir)
+        except Exception:
+            self.currentDir = os.path.dirname(self.currentDir)
+            ListOfThings = os.listdir(self.currentDir)
+
+        for entry in ListOfThings:
+            self.fullDirItt = os.path.join(self.currentDir,entry)
+            if os.path.isdir(self.fullDirItt) == True:
+                self.folderList.append(entry)
+            else:
+                self.flashcardList.append(entry.replace(".ben","")) 
+        
+
+        if self.CheckItemtype == "Folder":
+            if self.CheckItemtext in self.folderList:
+                return True
+            else:
+                return False
+        elif self.CheckItemtype == "File":
+            if self.CheckItemtext in self.flashcardList:
+                return True
+            else:
+                return False
+
+    #Button Functions
+    def OpenFile(self,fileName):
+        
+        print("opening file...")
+
+    def OpenFolder(self,folderName):
+        self.currentDir = os.path.join(self.currentDir,folderName)
+        self.ListBoxUpdate()
+
+    def BackButton(self):
+        if self.currentDir != self.path:
+            self.currentDir = os.path.dirname(self.currentDir)
+        else:
+            messagebox.showinfo(title=":D",message="You cannot go back any further")
+        self.ListBoxUpdate()
+
+
+    def RenameItem(self):
+        self.EditNamePopup = Popup("Edit Name",self,"Edit",self.selectedValue)
+
+    def DeleteItem(self):
+        self.areYouSure = messagebox.askokcancel(title="^o^",message="Are You Sure")
+        if self.areYouSure == True:
+            self.FileList.delete(self.selectedIndex)
+            self.deleteDir = os.path.join(self.currentDir,self.selectedValue)
+            try:
+                    os.remove(deleteDir)
+                except OSError: #will except if it is a directory
+                    try:
+                        #empty directory deletion
+                        os.rmdir(deleteDir)
+                    except:
+                        print("adnuhasdyfv)
+                        #delete a directory and everything in it
+                        shutil.rmtree(deleteDir) 
+            #If there is nothing left put up the text to add more files and folders
+            if self.FileList.get(0) == "":
+                self.listBoxWithNothing()
+        else:
+            pass
+   
+
 #For all popups
 class Popup(tk.Frame):
     def __init__(self, *args, **kwargs):
@@ -226,16 +436,19 @@ class Popup(tk.Frame):
         self.message = args[0]
         self.controller = args[1]
         self.createType = args[2]
+        try: #If it is the edit one, so jank, ik
+            self.editName = args[3]
+        except:
+            pass
         #run popup code
         self.popupmsg()
         
     def popupmsg(self):
-        #var defenition
         #Winodw Creation
         self.popup = tk.Toplevel()
         self.popup.attributes('-topmost', True)
         self.popup.update()
-        self.popup.title("Add")
+        self.popup.title("^_^")
         self.popup.geometry("200x70+300+200")
         self.popup.minsize(200,70)
         self.popup.maxsize(200,70)
@@ -253,26 +466,36 @@ class Popup(tk.Frame):
         
         #Widgits
         self.message = tk.Label(self.popup, text=self.message)
-        self.inputBox = tk.Entry(self.popup)
         self.destroyButton = tk.Button(self.popup, text="Cancel", command = lambda:self.QuitPopup())
-        self.enterButton = tk.Button(self.popup, text="Enter", command = lambda:self.enter())
+        self.inputBox = tk.Entry(self.popup)
 
-        #Packing
-        self.message.grid(row=0,column=0)
+        if self.createType in ["Folder","File"]: #Change what enter button does depending what the popup is for
+            self.enterButton = tk.Button(self.popup, text="Enter", command = lambda:self.CreationEnter())
+            
+        elif self.createType == "Edit":
+            self.enterButton = tk.Button(self.popup, text="Enter", command = lambda:self.EditingName())
+
+        #Griding
         self.inputBox.grid(row=0,column=1)
+        self.message.grid(row=0,column=0)
         self.destroyButton.grid(row=1,column=0)
         self.enterButton.grid(row=1,column=1)
-        
+
     def QuitPopup(self):
         self.popup.destroy()
         self.grab_release()
 
-    def enter(self):
+    def CreationEnter(self):
         self.message = self.inputBox.get()
         self.QuitPopup()
         self.controller.AddFolderOrFile(self.message,self.createType)
         
-        
+    def EditingName(self):
+        self.newName = self.inputBox.get()
+        self.QuitPopup()
+        self.controller.EditFolderOrFile(self.editName,self.newName)
+
+    
 #Check it is run not imported
 if __name__ == "__main__":
     app = RevisionApp()
