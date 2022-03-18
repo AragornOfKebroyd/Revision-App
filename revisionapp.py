@@ -29,7 +29,7 @@ class RevisionApp(tk.Tk):
         self.frames = {} #initialise a list for the different pages
 
         #Interates through the page classes
-        for fr in (TitlePage,QuizPage,VideoPage,ChecklistPage,FlashcardPage):
+        for fr in (TitlePage,QuizPage,VideoPage,ChecklistPage,FlashcardPage,WriteFlashcardPage):
             #Creating objects for each page
             #fr is each object in the above list, making self.Window the controller of all of them
             self.frame = fr(self.Window, self)
@@ -125,6 +125,8 @@ class FlashcardPage(tk.Frame):
         self.parent_dir = os.getcwd()
         self.directory = "Flashcards"
         self.path = os.path.join(self.parent_dir, self.directory)
+        self.filePathText = tk.StringVar()
+        self.filePathText.set("Flashcards\\")
         self.currentDir = self.path #Keeps track of what to display
         self.construction = False #makes sure no new folders can be gone into whilst one is being set up
         try:
@@ -168,6 +170,7 @@ class FlashcardPage(tk.Frame):
         #Widgits in Flashcard Frame
         self.Title = tk.Label(self.flashFrame, text="Flashcards")
         self.Revise = tk.Label(self.flashFrame, text="Revise Flashcards")
+        self.FilePathTextBox = tk.Label(self.flashFrame, textvariable=self.filePathText,anchor=tk.W,relief=tk.GROOVE,width=20)
         self.FileList = tk.Listbox(self.flashFrame, selectmode = "single",activestyle = "none")
         self.ScrollBar = tk.Scrollbar(self.flashFrame)
         self.openButton = tk.Button(self.flashFrame, text="Open", state = "disabled",command = lambda:self.SelectOrEditPathway())
@@ -182,7 +185,8 @@ class FlashcardPage(tk.Frame):
         #Griding widgits in flashcard frame
         self.Title.grid(row=0,column=0,columnspan=2,sticky="n")
         self.Revise.grid(row=1,column=0,sticky="n")
-        self.FileList.grid(row=1,column=0,columnspan=2,sticky="nsew")
+        self.FilePathTextBox.grid(row=1,column=0,columnspan=2,sticky="new")
+        self.FileList.grid(row=1,column=0,columnspan=2,sticky="nsew",pady=(20,0))
         self.ScrollBar.grid(row=1,column=0,columnspan=2,sticky="nes")
         self.openButton.grid(row=2,column=0,sticky="w",padx=10)
         self.backButton.grid(row=2,column=0,sticky="w",padx=55)
@@ -317,6 +321,7 @@ class FlashcardPage(tk.Frame):
         self.FileList.config(state=tk.NORMAL)
         self.FileList.delete(0,tk.END)
         self.selectedValue = None
+
         #Adds all the stuff in the folder
         try:
             ListOfThings = os.listdir(self.currentDir)
@@ -393,13 +398,30 @@ class FlashcardPage(tk.Frame):
 
     def OpenFolder(self,folderName):
         self.currentDir = os.path.join(self.currentDir,folderName)
+        #Make sure it doesnt strech the page and add the folder to the string filepath label
+        self.filepathTextFullTemp = "Flashcards\\"+self.currentDir[len(self.path)+1:]
+        print(self.filepathTextFullTemp)
+        if len(self.filepathTextFullTemp) > 60:
+            self.filePathText.set("<<"+self.filepathTextFullTemp[len(self.filepathTextFullTemp)-60:])
+        else:
+            self.filePathText.set(self.filepathTextFullTemp)
         self.ListBoxUpdate()
 
     def BackButton(self):
+        #If you are not at the root, else you cant go back any further so error
         if self.currentDir != self.path:
             self.currentDir = os.path.dirname(self.currentDir)
+            #Gets rid of the latest folder on the string that is in the label for file path
+            self.filepathTextFullTemp = "/".join("Flashcards\\"+self.currentDir[len(self.path)+1:].split("/")[0:len(self.filePathText.get().split("/"))-2])+"/"
+            #Make sure that it doesnt stretch the page
+            print(self.currentDir)
+            if len(self.filepathTextFullTemp) > 60:
+                self.filePathText.set("<<"+self.filepathTextFullTemp[len(self.filepathTextFullTemp)-60:])
+            else:
+                self.filePathText.set(self.filepathTextFullTemp)
         else:
             messagebox.showinfo(title=":D",message="You cannot go back any further")
+        #make the Listbox refresh
         self.ListBoxUpdate()
 
 
@@ -413,21 +435,28 @@ class FlashcardPage(tk.Frame):
             self.deleteDir = os.path.join(self.currentDir,self.selectedValue)
             try:
                     os.remove(deleteDir)
-                except OSError: #will except if it is a directory
-                    try:
-                        #empty directory deletion
-                        os.rmdir(deleteDir)
-                    except:
-                        print("adnuhasdyfv)
-                        #delete a directory and everything in it
-                        shutil.rmtree(deleteDir) 
+            except OSError: #will except if it is a directory
+                try:
+                    #empty directory deletion
+                    os.rmdir(deleteDir)
+                except:
+                    print("adnuhasdyfv)")
+                    #delete a directory and everything in it
+                    shutil.rmtree(deleteDir) 
             #If there is nothing left put up the text to add more files and folders
             if self.FileList.get(0) == "":
                 self.listBoxWithNothing()
         else:
             pass
-   
 
+   
+class WriteFlashcardPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent)
+        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        self.button.pack()
+
+        
 #For all popups
 class Popup(tk.Frame):
     def __init__(self, *args, **kwargs):
