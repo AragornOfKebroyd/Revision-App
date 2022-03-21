@@ -11,7 +11,7 @@ import stat
 import shutil
 import random
 
-clearOnStartUp = True
+clearOnStartUp = False
 
 class RevisionApp(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -60,13 +60,15 @@ class TitlePage(tk.Frame):
     def __init__(self, parent, controller): #self is the class Object TitlePage
         tk.Frame.__init__(self, parent)
         self.parent = parent #parent is the parent window
-        
+        self.controller = controller
         #Window Setup
-        controller.title("Revision App")
-        controller.minsize(942,669)
+        self.controller.title("Revision App")
+        self.controller.geometry("942x669")
+        self.controller.minsize(942,669)
+        ######controller.resizable(width=False, height=False) #cant full screen
         
         #Widgits In Main Frame
-        self.button = tk.Button(self, text="Leave",command = lambda:controller.destroy()) # Leave button
+        self.button = tk.Button(self, text="Leave",command = lambda:self.controller.destroy()) # Leave button
         self.textLabel = tk.Label(self, text="Title") # Title
         self.buttonFrame = tk.Frame(self, bg ="#d633a8") #For the 4 buttons; blue just for now 
 
@@ -82,10 +84,10 @@ class TitlePage(tk.Frame):
         self.button.pack(side="bottom")
 
         #Widgits in Button Frame
-        self.QuizButton = tk.Button(self.buttonFrame, text="Quizes",command = lambda:controller.showPage(QuizPage))
-        self.VideoButton = tk.Button(self.buttonFrame, text="Videos",command = lambda:controller.showPage(VideoPage))
-        self.FlashcardButton = tk.Button(self.buttonFrame, text="Flashcards",command = lambda:controller.showPage(FlashcardPage))
-        self.ChecklistButton = tk.Button(self.buttonFrame, text="Checklists",command = lambda:controller.showPage(ChecklistPage))
+        self.QuizButton = tk.Button(self.buttonFrame, text="Quizes",command = lambda:self.controller.showPage(QuizPage))
+        self.VideoButton = tk.Button(self.buttonFrame, text="Videos",command = lambda:self.controller.showPage(VideoPage))
+        self.FlashcardButton = tk.Button(self.buttonFrame, text="Flashcards",command = lambda:self.controller.showPage(FlashcardPage))
+        self.ChecklistButton = tk.Button(self.buttonFrame, text="Checklists",command = lambda:self.controller.showPage(ChecklistPage))
 
         #Packing widgits in Button Frame
         self.QuizButton.grid(row = 0, column = 0, ipadx = 90, ipady = 50, padx = 50, pady=30, sticky = "se")
@@ -98,27 +100,31 @@ class TitlePage(tk.Frame):
         
 class QuizPage(tk.Frame):
     def __init__(self, parent, controller):
+        self.controller = controller
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
-        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        self.button = tk.Button(self,text="back",command=lambda:self.controller.showPage(TitlePage))
         self.button.pack()
 
     
 class VideoPage(tk.Frame):
     def __init__(self, parent, controller):
+        self.controller = controller
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
-        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        self.button = tk.Button(self,text="back",command=lambda:self.controller.showPage(TitlePage))
         self.button.pack()
 
 
 class ChecklistPage(tk.Frame):
     def __init__(self, parent, controller):
+        self.controller = controller
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
-        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        self.button = tk.Button(self,text="back",command=lambda:self.controller.showPage(TitlePage))
         self.button.pack()
 
 
 class FlashcardPage(tk.Frame):
     def __init__(self, parent, controller):
+        self.controller = controller
         tk.Frame.__init__(self, parent) # initialises the first parameter of the class
         
         #First Time Setup Of OS, makes the file directory if it doesnt allready exist
@@ -135,24 +141,8 @@ class FlashcardPage(tk.Frame):
             #It allready exists
             pass
         
-        #Clears the root directory if the setting is enabled (mainly for when i dont want to have to clear it every time manually)
-        if clearOnStartUp == True:
-            for thing in os.listdir(self.path):
-                thingPath = os.path.join(self.path,thing)
-                try:
-                    os.remove(thingPath)
-                except OSError: #will except if it is a directory
-                    try:
-                        #empty directory deletion
-                        os.rmdir(thingPath)
-                    except:
-                        #delete a directory and everything in it
-                        shutil.rmtree(thingPath) 
-        else:
-            #code to show what folders and flashcards there are
-            pass
         #Widgits In Main Frame
-        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        self.button = tk.Button(self,text="back",command=lambda:self.controller.showPage(TitlePage))
         self.flashFrame = tk.Frame(self, bg ="#a643f8")
 
         #Flash Frame Config
@@ -204,6 +194,22 @@ class FlashcardPage(tk.Frame):
         self.FileList.bind('<Double-Button-1>', lambda x:self.SelectOrEditPathway()) 
         self.FileList.bind('<Return>',lambda x: self.SelectOrEditPathway())
         self.FileList.bind('<Escape>', lambda x: self.BackButton())
+
+        #Clears the root directory if the setting is enabled (mainly for when i dont want to have to clear it every time manually)
+        if clearOnStartUp == True:
+            for thing in os.listdir(self.path):
+                thingPath = os.path.join(self.path,thing)
+                try:
+                    os.remove(thingPath)
+                except OSError: #will except if it is a directory
+                    try:
+                        #empty directory deletion
+                        os.rmdir(thingPath)
+                    except:
+                        #delete a directory and everything in it
+                        shutil.rmtree(thingPath) 
+        else:
+            self.ListBoxUpdate()
 
     def listBoxWithNothing(self):
         self.FileList.insert(tk.END,"create folders or flashcards")
@@ -390,17 +396,19 @@ class FlashcardPage(tk.Frame):
                 return True
             else:
                 return False
-
+    
     #Button Functions
     def OpenFile(self,fileName):
         
         print("opening file...")
+        self.controller.showPage(WriteFlashcardPage)
+        
 
     def OpenFolder(self,folderName):
         self.currentDir = os.path.join(self.currentDir,folderName)
+
         #Make sure it doesnt strech the page and add the folder to the string filepath label
-        self.filepathTextFullTemp = "Flashcards\\"+self.currentDir[len(self.path)+1:]
-        print(self.filepathTextFullTemp)
+        self.filepathTextFullTemp = "Flashcards\\"+self.currentDir[len(self.path)+1:]+"\\"
         if len(self.filepathTextFullTemp) > 60:
             self.filePathText.set("<<"+self.filepathTextFullTemp[len(self.filepathTextFullTemp)-60:])
         else:
@@ -412,9 +420,8 @@ class FlashcardPage(tk.Frame):
         if self.currentDir != self.path:
             self.currentDir = os.path.dirname(self.currentDir)
             #Gets rid of the latest folder on the string that is in the label for file path
-            self.filepathTextFullTemp = "/".join("Flashcards\\"+self.currentDir[len(self.path)+1:].split("/")[0:len(self.filePathText.get().split("/"))-2])+"/"
+            self.filepathTextFullTemp = "Flashcards"+self.currentDir[len(self.path):]+"\\"
             #Make sure that it doesnt stretch the page
-            print(self.currentDir)
             if len(self.filepathTextFullTemp) > 60:
                 self.filePathText.set("<<"+self.filepathTextFullTemp[len(self.filepathTextFullTemp)-60:])
             else:
@@ -426,23 +433,32 @@ class FlashcardPage(tk.Frame):
 
 
     def RenameItem(self):
-        self.EditNamePopup = Popup("Edit Name",self,"Edit",self.selectedValue)
+        if self.selectedType == "Folder":
+            self.EditNamePopup = Popup("Edit Name",self,"Edit",self.selectedValue[1:])
+        else:
+            self.EditNamePopup = Popup("Edit Name",self,"Edit",self.selectedValue)
 
     def DeleteItem(self):
         self.areYouSure = messagebox.askokcancel(title="^o^",message="Are You Sure")
         if self.areYouSure == True:
-            self.FileList.delete(self.selectedIndex)
-            self.deleteDir = os.path.join(self.currentDir,self.selectedValue)
+            if self.selectedType == "Folder":
+                self.deleteDir = os.path.join(self.currentDir,self.selectedValue[1:])
+            else:
+                self.deleteDir = os.path.join(self.currentDir,self.selectedValue)+".ben"
             try:
-                    os.remove(deleteDir)
+                os.remove(self.deleteDir)
             except OSError: #will except if it is a directory
                 try:
                     #empty directory deletion
-                    os.rmdir(deleteDir)
+                    os.rmdir(self.deleteDir)
                 except:
-                    print("adnuhasdyfv)")
                     #delete a directory and everything in it
-                    shutil.rmtree(deleteDir) 
+                    self.areYouReallySure = messagebox.askokcancel(title="^O^",message="Are You Really Sure, this folder has items in it?")
+                    if self.areYouReallySure:
+                        shutil.rmtree(self.deleteDir)
+                    else:
+                        return
+            self.FileList.delete(self.selectedIndex)
             #If there is nothing left put up the text to add more files and folders
             if self.FileList.get(0) == "":
                 self.listBoxWithNothing()
@@ -452,9 +468,54 @@ class FlashcardPage(tk.Frame):
    
 class WriteFlashcardPage(tk.Frame):
     def __init__(self, parent, controller):
+        self.controller = controller
         tk.Frame.__init__(self,parent)
-        self.button = tk.Button(self,text="back",command=lambda:controller.showPage(TitlePage))
+        #OS stuff
+        self.parent_dir = os.getcwd()
+        self.directory = "Flashcards"
+        self.path = os.path.join(self.parent_dir, self.directory)
+        self.currentDir = self.path
+
+        #Widgits In Main Frame
+        self.button = tk.Button(self,text="back",command=lambda:self.controller.showPage(FlashcardPage))                
+        self.flashFrame = tk.Frame(self, bg ="#a643f8")
+
+        #Flash Frame Config
+        self.flashFrame.grid_rowconfigure(0,weight=1)
+        self.flashFrame.grid_rowconfigure(1,weight=5)
+        self.flashFrame.grid_rowconfigure(2,weight=2)
+        self.flashFrame.grid_columnconfigure(0,weight=3)
+        self.flashFrame.grid_columnconfigure(1,weight=2)
+        self.flashFrame.grid_columnconfigure(2,weight=1)
+
+        #Packing Widgits In Main Frame
         self.button.pack()
+        self.flashFrame.pack(padx=15,pady=15,fill="both",expand=True)
+
+        #Widgits in Flashcard Frame
+        self.Title = tk.Label(self.flashFrame, text="Flashcards")
+        self.addImageButton = tk.Button(self.flashFrame, text="Add Image")
+        self.changeFontButton = tk.Button(self.flashFrame, text="Font")
+        self.changeTextSizeButton = tk.Button(self.flashFrame, text="Size")
+        self.saveButton = tk.Button(self.flashFrame, text="Save")
+        self.saveAndExitButton = tk.Button(self.flashFrame, text="Save & Exit", width = 15, height = 8)
+        self.flipFlashcardButton = tk.Button(self.flashFrame, text="Flip", width = 15, height = 8)
+        self.hideOtherSidePreviewButton = tk.Button(self.flashFrame, text="Hide preview", width = 15, height = 8)
+        self.flashCardFrame = tk.Frame(self.flashFrame,bg = "#34c9eb")
+
+
+        #Griding widgits in flashcard frame
+        self.Title.grid(row=0,column=0,columnspan=2,sticky="n")
+        self.addImageButton.grid(row=2,column=0,sticky="w",padx=10)
+        self.changeFontButton.grid(row=2,column=0,sticky="w",padx=55)
+        self.changeTextSizeButton.grid(row=2,column=0,sticky="w",padx=96)
+        self.saveButton.grid(row=2,column=1,sticky="e",padx=10)
+        self.saveAndExitButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(25,0))
+        self.flipFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(200,0))
+        self.hideOtherSidePreviewButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(375,0))
+        self.flashCardFrame.grid(row=1,column=0,columnspan=2,sticky="nsew")
+
+
 
         
 #For all popups
