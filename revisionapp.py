@@ -11,6 +11,10 @@ import stat
 import shutil
 import random
 
+## THIS ALLOWS YOU TO GET ATTRIBUTES FROM DIFFERENT CLASSES ##
+#        self.controller.frames[{class}].{attribute}         #
+## THIS ALLOWS YOU TO GET ATTRIBUTES FROM DIFFERENT CLASSES ##
+
 clearOnStartUp = False
 
 class RevisionApp(tk.Tk):
@@ -40,16 +44,17 @@ class RevisionApp(tk.Tk):
         #Call the function to show the main title page
         self.showPage(TitlePage)
 
-    def showPage(self, frame):
+    def showPage(self, *args):
+        self.frame = args[0]        
         try: #If it has allready started
             self.previousPage = self.page #where it will go to the except 
-            self.page = self.frames[frame]
+            self.page = self.frames[self.frame]
             self.page.grid(row=0,column=0,sticky="nsew")
             self.page.tkraise()#Brings the frame to the front
             self.previousPage.grid_forget()
             
         except: #There is no previous page, e.g its starting up
-            self.page = self.frames[frame]
+            self.page = self.frames[self.frame]
             self.page.grid(row=0,column=0,sticky="nsew")
             self.page.tkraise()#Brings the frame to the front
 
@@ -399,11 +404,10 @@ class FlashcardPage(tk.Frame):
     
     #Button Functions
     def OpenFile(self,fileName):
-        
-        print("opening file...")
+        self.controller.frames[WriteFlashcardPage].startup(fileName)
+        #Shows the page
         self.controller.showPage(WriteFlashcardPage)
         
-
     def OpenFolder(self,folderName):
         self.currentDir = os.path.join(self.currentDir,folderName)
 
@@ -474,7 +478,8 @@ class WriteFlashcardPage(tk.Frame):
         self.parent_dir = os.getcwd()
         self.directory = "Flashcards"
         self.path = os.path.join(self.parent_dir, self.directory)
-        self.currentDir = self.path
+        print()
+        #self.currentDir = 
 
         #Widgits In Main Frame
         self.button = tk.Button(self,text="back",command=lambda:self.controller.showPage(FlashcardPage))                
@@ -498,25 +503,28 @@ class WriteFlashcardPage(tk.Frame):
         self.changeFontButton = tk.Button(self.flashFrame, text="Font")
         self.changeTextSizeButton = tk.Button(self.flashFrame, text="Size")
         self.saveButton = tk.Button(self.flashFrame, text="Save")
-        self.saveAndExitButton = tk.Button(self.flashFrame, text="Save & Exit", width = 15, height = 8)
-        self.flipFlashcardButton = tk.Button(self.flashFrame, text="Flip", width = 15, height = 8)
-        self.hideOtherSidePreviewButton = tk.Button(self.flashFrame, text="Hide preview", width = 15, height = 8)
+        self.saveAndExitButton = tk.Button(self.flashFrame, text="Save & Exit")
+        self.flipFlashcardButton = tk.Button(self.flashFrame, text="Flip")
+        self.hideOtherSidePreviewButton = tk.Button(self.flashFrame, text="Hide preview")
         self.flashCardFrame = tk.Frame(self.flashFrame,bg = "#34c9eb")
 
 
         #Griding widgits in flashcard frame
         self.Title.grid(row=0,column=0,columnspan=2,sticky="n")
         self.addImageButton.grid(row=2,column=0,sticky="w",padx=10)
-        self.changeFontButton.grid(row=2,column=0,sticky="w",padx=55)
-        self.changeTextSizeButton.grid(row=2,column=0,sticky="w",padx=96)
+        self.changeFontButton.grid(row=2,column=0,sticky="w",padx=105)
+        self.changeTextSizeButton.grid(row=2,column=0,sticky="w",padx=296)
         self.saveButton.grid(row=2,column=1,sticky="e",padx=10)
         self.saveAndExitButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(25,0))
         self.flipFlashcardButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(200,0))
         self.hideOtherSidePreviewButton.grid(row=1,rowspan=2,column=2,sticky="n",pady=(375,0))
         self.flashCardFrame.grid(row=1,column=0,columnspan=2,sticky="nsew")
 
-
-
+    def startup(self,fileName):
+        self.fileNameOpened = fileName
+        self.currentDir = os.path.join(self.controller.frames[FlashcardPage].currentDir,self.fileNameOpened+".ben")
+        print(self.currentDir)
+    
         
 #For all popups
 class Popup(tk.Frame):
